@@ -8,19 +8,18 @@ func main() {
 	// Step 1: Create a new http.ServeMux
 	mux := http.NewServeMux()
 
-	// Serve a specific HTML file for the root path
-	mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		if r.URL.Path == "/" {
-			http.ServeFile(w, r, "index.html") // Replace with your filename
-		}else if r.URL.Path == "/assets/logo.png" {
-			http.ServeFile(w, r, "img.png")
-		}else {
-			http.NotFound(w, r)
-		}
+	// Add readiness endpoint at /healthz
+	mux.HandleFunc("/healthz", func(w http.ResponseWriter, r *http.Request) {
+		// 1. Write the Content-Type header
+		w.Header().Set("Content-Type", "text/plain; charset=utf-8")
+		// 2. Write the status code
+		w.WriteHeader(http.StatusOK)
+		// 3. Write the body text
+		w.Write([]byte("OK"))
 	})
 
-	// Optional: Still serve other static files from /static/ path
-	// mux.Handle("/static/", http.StripPrefix("/static/", http.FileServer(http.Dir("."))))
+	// Use http.FileServer to serve files from current directory at /app/ path
+	mux.Handle("/app/", http.StripPrefix("/app", http.FileServer(http.Dir("."))))
 
 	// Step 2: Create a new http.Server struct
 	server := &http.Server{
